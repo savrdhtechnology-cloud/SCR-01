@@ -1,0 +1,31 @@
+{
+  "expo": {
+    "name": "Savrdh Credit Resolution",
+    "slug": "savrdh-credit-resolution",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "automatic",
+    "scheme": "savrdhcredit",
+    "splash": {
+      "backgroundColor": "#071426",
+      "resizeMode": "contain"
+    },
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.savrdhfinancialservices.creditresolution",
+      "infoPlist": {
+        "NSFaceIDUsageDescription": "Use Face ID to securely access your Savrdh account."
+      }
+    },
+    "android": {
+      "package": "com.savrdhfinancialservices.creditresolution",
+      "permissions": []
+    },
+    "web": { "bundler": "metro" },
+    "plugins": ["expo-secure-store", "expo-document-picker"],
+    "extra": {
+      "websiteUrl": "https://savrdhfinancialservices.com",
+      "clientPortalUrl": "https://savrdhfinancialservices.com/portal/login"
+    }
+  }
+}
