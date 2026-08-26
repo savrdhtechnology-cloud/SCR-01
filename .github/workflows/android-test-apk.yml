@@ -1,4 +1,4 @@
-name: Build Android Test APK
+name: Build Android Standalone APK
 
 on:
   workflow_dispatch:
@@ -19,6 +19,7 @@ jobs:
         working-directory: mobile
     env:
       CI: "1"
+      NODE_ENV: production
       EXPO_PUBLIC_SUPABASE_URL: https://qngjmepksxavimwnhtqt.supabase.co
       EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY: sb_publishable_rma90Xm4Hy4nT0CEXTlqHQ_6oKKWeds
       EXPO_PUBLIC_WEBSITE_URL: https://savrdhfinancialservices.com
@@ -50,31 +51,31 @@ jobs:
       - name: Generate Android project
         run: npx expo prebuild --platform android --clean
 
-      - name: Build debug APK
+      - name: Build standalone release APK
         run: |
           chmod +x android/gradlew
           cd android
-          ./gradlew assembleDebug --no-daemon
+          ./gradlew assembleRelease --no-daemon
 
       - name: Stage APK
         run: |
           mkdir -p dist
-          cp android/app/build/outputs/apk/debug/app-debug.apk dist/Savrdh-Credit-Resolution-Test.apk
+          cp android/app/build/outputs/apk/release/app-release.apk dist/Savrdh-Credit-Resolution.apk
 
-      - name: Upload APK
+      - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
-          name: Savrdh-Credit-Resolution-Test-APK
-          path: mobile/dist/Savrdh-Credit-Resolution-Test.apk
+          name: Savrdh-Credit-Resolution-Release-APK
+          path: mobile/dist/Savrdh-Credit-Resolution.apk
           retention-days: 30
 
       - name: Publish APK release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          TAG="mobile-test-v1.0.${GITHUB_RUN_NUMBER}"
-          gh release create "$TAG" dist/Savrdh-Credit-Resolution-Test.apk \
+          TAG="mobile-release-v1.0.${GITHUB_RUN_NUMBER}"
+          gh release create "$TAG" dist/Savrdh-Credit-Resolution.apk \
             --repo "${GITHUB_REPOSITORY}" \
-            --title "Savrdh Android Test v1.0.${GITHUB_RUN_NUMBER}" \
-            --notes "Installable Android test APK connected to the Savrdh CRM and Supabase production database." \
+            --title "Savrdh Android v1.0.${GITHUB_RUN_NUMBER}" \
+            --notes "Standalone Android release APK connected to the Savrdh CRM and Supabase production database." \
             --latest
