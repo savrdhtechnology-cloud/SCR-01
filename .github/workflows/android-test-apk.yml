@@ -68,13 +68,13 @@ jobs:
           path: mobile/dist/Savrdh-Credit-Resolution-Test.apk
           retention-days: 30
 
-      - name: Publish APK to website downloads
+      - name: Publish APK release
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
-          cd ..
-          mkdir -p public/downloads
-          cp mobile/dist/Savrdh-Credit-Resolution-Test.apk public/downloads/Savrdh-Credit-Resolution-Test.apk
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add public/downloads/Savrdh-Credit-Resolution-Test.apk
-          git commit -m "Publish latest Android test APK" || exit 0
-          git push
+          TAG="mobile-test-v1.0.${GITHUB_RUN_NUMBER}"
+          gh release create "$TAG" dist/Savrdh-Credit-Resolution-Test.apk \
+            --repo "${GITHUB_REPOSITORY}" \
+            --title "Savrdh Android Test v1.0.${GITHUB_RUN_NUMBER}" \
+            --notes "Installable Android test APK connected to the Savrdh CRM and Supabase production database." \
+            --latest
