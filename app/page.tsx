@@ -76,8 +76,8 @@ export default function App(){
       <footer>🔒 Bank-grade encrypted • Your data stays confidential</footer>
     </form>
    </div>}
-   <a className="apk-download" href="https://github.com/savrdhtechnology-cloud/SCR-01/releases/latest/download/Savrdh-Credit-Resolution-Test.apk" download>
-     <span>Android App</span><strong>Download Test APK ↓</strong>
+   <a className="apk-download" href="https://github.com/savrdhtechnology-cloud/SCR-01/releases/latest/download/Savrdh-Credit-Resolution.apk" download>
+     <span>Android App</span><strong>Download Android App ↓</strong>
    </a>
    <p className="hint">Tap the highlighted app controls to explore the complete flow.</p>
  </main>
