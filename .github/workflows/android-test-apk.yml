@@ -1,0 +1,71 @@
+name: Build Android Test APK
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "mobile/**"
+      - ".github/workflows/android-test-apk.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  build-apk:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: mobile
+    env:
+      EXPO_PUBLIC_SUPABASE_URL: https://qngjmepksxavimwnhtqt.supabase.co
+      EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY: sb_publishable_rma90Xm4Hy4nT0CEXTlqHQ_6oKKWeds
+      EXPO_PUBLIC_WEBSITE_URL: https://savrdhfinancialservices.com
+      EXPO_PUBLIC_PORTAL_URL: https://savrdhfinancialservices.com/portal/login
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: mobile/package-lock.json
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: gradle
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Align Expo dependencies
+        run: npx expo install --fix --non-interactive
+
+      - name: Type check
+        run: npm run typecheck
+
+      - name: Generate Android project
+        run: npx expo prebuild --platform android --clean --non-interactive
+
+      - name: Build debug APK
+        run: |
+          chmod +x android/gradlew
+          cd android
+          ./gradlew assembleDebug --no-daemon
+
+      - name: Stage APK
+        run: |
+          mkdir -p dist
+          cp android/app/build/outputs/apk/debug/app-debug.apk dist/Savrdh-Credit-Resolution-Test.apk
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: Savrdh-Credit-Resolution-Test-APK
+          path: mobile/dist/Savrdh-Credit-Resolution-Test.apk
+          retention-days: 30
