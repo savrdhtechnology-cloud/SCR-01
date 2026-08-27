@@ -57,6 +57,9 @@ jobs:
 
       - name: Configure Gradle memory
         run: |
+          # Expo prebuild can leave gradle.properties without a trailing newline.
+          # Add one explicitly so our Gradle keys cannot be concatenated onto the previous Expo key.
+          printf '\n' >> android/gradle.properties
           cat >> android/gradle.properties <<'EOF'
           org.gradle.jvmargs=-Xmx4g -XX:MaxMetaspaceSize=1536m -Dfile.encoding=UTF-8
           org.gradle.workers.max=1
@@ -68,6 +71,7 @@ jobs:
           EOF
           echo "--- Effective Gradle memory settings ---"
           tail -n 12 android/gradle.properties
+          grep -q '^org.gradle.jvmargs=-Xmx4g -XX:MaxMetaspaceSize=1536m' android/gradle.properties
 
       - name: Build standalone release APK
         timeout-minutes: 35
