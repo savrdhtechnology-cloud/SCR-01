@@ -20,6 +20,8 @@ jobs:
     env:
       CI: "1"
       NODE_ENV: production
+      JAVA_TOOL_OPTIONS: "-Xmx4g -XX:MaxMetaspaceSize=1g -Dfile.encoding=UTF-8"
+      GRADLE_OPTS: "-Dorg.gradle.jvmargs=-Xmx4g -XX:MaxMetaspaceSize=1g -Dfile.encoding=UTF-8 -Dkotlin.daemon.jvm.options=-Xmx1536m"
       EXPO_PUBLIC_SUPABASE_URL: https://qngjmepksxavimwnhtqt.supabase.co
       EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY: sb_publishable_rma90Xm4Hy4nT0CEXTlqHQ_6oKKWeds
       EXPO_PUBLIC_WEBSITE_URL: https://savrdhfinancialservices.com
@@ -51,11 +53,21 @@ jobs:
       - name: Generate Android project
         run: npx expo prebuild --platform android --clean
 
+      - name: Configure Gradle memory
+        run: |
+          cat >> android/gradle.properties <<'EOF'
+          org.gradle.jvmargs=-Xmx4g -XX:MaxMetaspaceSize=1g -Dfile.encoding=UTF-8
+          org.gradle.workers.max=2
+          org.gradle.parallel=false
+          kotlin.daemon.jvmargs=-Xmx1536m -XX:MaxMetaspaceSize=512m
+          EOF
+
       - name: Build standalone release APK
+        timeout-minutes: 30
         run: |
           chmod +x android/gradlew
           cd android
-          ./gradlew assembleRelease --no-daemon
+          ./gradlew assembleRelease --no-daemon --max-workers=2 --stacktrace
 
       - name: Stage APK
         run: |
