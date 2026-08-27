@@ -16,7 +16,7 @@ type Tab = 'home' | 'report' | 'new' | 'requests' | 'profile';
 type AuthMode = 'password' | 'otp' | 'signup' | 'reset';
 type EmailOtpType = 'email' | 'signup' | 'recovery';
 
-const CURRENT_APP_VERSION = '1.0.13';
+const CURRENT_APP_VERSION = '1.0.16';
 const UPDATE_MANIFEST_URL = 'https://savrdhfinancialservices.com/api/mobile/latest';
 
 function isNewerVersion(latest: string, current: string) {
