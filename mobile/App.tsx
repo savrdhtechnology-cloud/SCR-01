@@ -13,9 +13,9 @@ import { darkTheme, lightTheme, type AppTheme } from './src/theme';
 import type { CreditReport, Message, Payment, Profile, ResolutionRequest } from './src/types';
 
 type Tab = 'home' | 'report' | 'new' | 'requests' | 'profile';
-type AuthMode = 'password' | 'otp' | 'signup';
+type AuthMode = 'password' | 'otp' | 'signup' | 'reset';
 
-const CURRENT_APP_VERSION = '1.0.11';
+const CURRENT_APP_VERSION = '1.0.12';
 const UPDATE_MANIFEST_URL = 'https://savrdhfinancialservices.com/api/mobile/latest';
 
 function isNewerVersion(latest: string, current: string) {
@@ -91,6 +91,9 @@ function Auth({ theme, dark, setDark }: { theme: AppTheme; dark: boolean; setDar
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
   const [mobile, setMobile] = useState('');
+  const [otp, setOtp] = useState('');
+  const [otpSent, setOtpSent] = useState(false);
+  const [resetVerified, setResetVerified] = useState(false);
   const [busy, setBusy] = useState(false);
 
   async function submit() {
@@ -98,14 +101,41 @@ function Auth({ theme, dark, setDark }: { theme: AppTheme; dark: boolean; setDar
     setBusy(true);
     try {
       if (mode === 'otp') {
-        const { error } = await supabase.auth.signInWithOtp({ email: email.trim().toLowerCase(), options: { shouldCreateUser: false, emailRedirectTo: 'savrdhcredit://auth/callback' } });
-        if (error) throw error;
-        Alert.alert('OTP link sent', 'Please check your email to securely sign in.');
+        if (!otpSent) {
+          const { error } = await supabase.auth.signInWithOtp({ email: email.trim().toLowerCase(), options: { shouldCreateUser: false } });
+          if (error) throw error;
+          setOtpSent(true);
+          Alert.alert('OTP sent', '6-digit SAVRDH verification code aapke registered email par bheja gaya hai.');
+        } else {
+          if (otp.length !== 6) throw new Error('Enter the 6-digit OTP.');
+          const { error } = await supabase.auth.verifyOtp({ email: email.trim().toLowerCase(), token: otp, type: 'email' });
+          if (error) throw error;
+        }
       } else if (mode === 'signup') {
         if (password.length < 8 || !name.trim()) throw new Error('Enter your name and a password of at least 8 characters.');
-        const { data, error } = await supabase.auth.signUp({ email: email.trim().toLowerCase(), password, options: { emailRedirectTo: 'savrdhcredit://auth/callback', data: { full_name: name.trim(), mobile: mobile.trim() } } });
+        const { data, error } = await supabase.auth.signUp({ email: email.trim().toLowerCase(), password, options: { data: { full_name: name.trim(), mobile: mobile.trim() } } });
         if (error) throw error;
-        Alert.alert('Account created', data.session ? 'Welcome to Savrdh.' : 'Verification email bheja gaya hai. Email mein Confirm link dabaiye; app automatically open hokar login ho jayegi.');
+        setMode('otp'); setOtpSent(true);
+        Alert.alert('Account created', data.session ? 'Welcome to SAVRDH.' : '6-digit verification code email par bheja gaya hai. Code enter karke account activate karein.');
+      } else if (mode === 'reset') {
+        if (!otpSent) {
+          const { error } = await supabase.auth.resetPasswordForEmail(email.trim().toLowerCase());
+          if (error) throw error;
+          setOtpSent(true);
+          Alert.alert('Reset code sent', 'Email mein mila 6-digit recovery code enter karein.');
+        } else if (!resetVerified) {
+          if (otp.length !== 6) throw new Error('Enter the 6-digit reset OTP.');
+          const { error } = await supabase.auth.verifyOtp({ email: email.trim().toLowerCase(), token: otp, type: 'recovery' });
+          if (error) throw error;
+          setResetVerified(true); setPassword('');
+        } else {
+          if (password.length < 8) throw new Error('New password must be at least 8 characters.');
+          const { error } = await supabase.auth.updateUser({ password });
+          if (error) throw error;
+          await supabase.auth.signOut();
+          setMode('password'); setOtpSent(false); setResetVerified(false); setOtp(''); setPassword('');
+          Alert.alert('Password updated', 'Ab naye password se sign in karein.');
+        }
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email: email.trim().toLowerCase(), password });
         if (error) throw error;
@@ -121,14 +151,16 @@ function Auth({ theme, dark, setDark }: { theme: AppTheme; dark: boolean; setDar
       <Text style={[styles.hero, { color: theme.text }]}>Take Control of Your Credit</Text>
       <Text style={[styles.sub, { color: theme.muted }]}>Track cases, upload documents and connect directly with your Savrdh advisor.</Text>
       <Card theme={theme}>
-        <Text style={[styles.h2, { color: theme.text }]}>{mode === 'signup' ? 'Create Account' : 'Welcome back'}</Text>
+        <Text style={[styles.h2, { color: theme.text }]}>{mode === 'signup' ? 'Create Account' : mode === 'reset' ? 'Reset Password' : 'Welcome back'}</Text>
         <View style={[styles.segment, { backgroundColor: theme.surface2 }]}>
-          {(['password', 'otp'] as AuthMode[]).map(item => <Pressable key={item} onPress={() => setMode(item)} style={[styles.segmentItem, mode === item && { backgroundColor: theme.primary }]}><Text style={{ color: mode === item ? (theme.dark ? '#071426' : '#fff') : theme.muted, fontWeight: '800' }}>{item === 'password' ? 'Password' : 'OTP Login'}</Text></Pressable>)}
+          {(['password', 'otp'] as AuthMode[]).map(item => <Pressable key={item} onPress={() => { setMode(item); setOtpSent(false); setOtp(''); setResetVerified(false); }} style={[styles.segmentItem, mode === item && { backgroundColor: theme.primary }]}><Text style={{ color: mode === item ? (theme.dark ? '#071426' : '#fff') : theme.muted, fontWeight: '800' }}>{item === 'password' ? 'Password' : 'OTP Login'}</Text></Pressable>)}
         </View>
         {mode === 'signup' && <><Field label="Full Name" value={name} onChangeText={setName} theme={theme} /><Field label="Mobile Number" value={mobile} onChangeText={setMobile} keyboardType="phone-pad" theme={theme} /></>}
         <Field label="Email" value={email} onChangeText={setEmail} keyboardType="email-address" autoCapitalize="none" theme={theme} />
-        {mode !== 'otp' && <Field label="Password" value={password} onChangeText={setPassword} secureTextEntry theme={theme} />}
-        <Button label={busy ? 'Please wait…' : mode === 'signup' ? 'Create Account' : mode === 'otp' ? 'Send OTP Link' : 'Sign In'} onPress={submit} theme={theme} disabled={busy} />
+        {(mode === 'otp' || mode === 'reset') && otpSent && !resetVerified && <Field label="6-digit OTP" value={otp} onChangeText={(v) => setOtp(v.replace(/\D/g, ''))} keyboardType="number-pad" maxLength={6} theme={theme} />}
+        {(mode === 'password' || mode === 'signup' || (mode === 'reset' && resetVerified)) && <Field label={mode === 'reset' ? 'New Password' : 'Password'} value={password} onChangeText={setPassword} secureTextEntry theme={theme} />}
+        <Button label={busy ? 'Please wait…' : mode === 'signup' ? 'Create Account' : mode === 'otp' ? (otpSent ? 'Verify & Sign In' : 'Send OTP') : mode === 'reset' ? (!otpSent ? 'Send Reset OTP' : !resetVerified ? 'Verify OTP' : 'Set New Password') : 'Sign In'} onPress={submit} theme={theme} disabled={busy} />
+        {mode === 'password' && <Pressable onPress={() => { setMode('reset'); setOtpSent(false); setOtp(''); setResetVerified(false); }}><Text style={[styles.link, { color: theme.primary }]}>Forgot password?</Text></Pressable>}
         <Pressable onPress={() => setMode(mode === 'signup' ? 'password' : 'signup')}><Text style={[styles.link, { color: theme.primary }]}>{mode === 'signup' ? 'Already registered? Sign in' : 'New to SAVRDH? Create an account'}</Text></Pressable>
       </Card>
       <Pressable onPress={() => Linking.openURL(process.env.EXPO_PUBLIC_WEBSITE_URL || 'https://savrdhfinancialservices.com')}><Text style={[styles.link, { color: theme.muted }]}>Visit savrdhfinancialservices.com</Text></Pressable>
