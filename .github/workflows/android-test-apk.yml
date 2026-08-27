@@ -48,6 +48,14 @@ jobs:
       - name: Type check
         run: npm run typecheck
 
+      - name: Generate branded app icons
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y imagemagick
+          mkdir -p assets
+          convert -background none assets/icon.svg -resize 1024x1024 assets/icon.png
+          cp assets/icon.png assets/adaptive-icon.png
+
       - name: Generate Android project
         run: npx expo prebuild --platform android --clean
 

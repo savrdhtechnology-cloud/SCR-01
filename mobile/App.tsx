@@ -24,7 +24,20 @@ export default function App() {
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => { setSession(data.session); setLoading(false); });
     const { data } = supabase.auth.onAuthStateChange((_event, next) => setSession(next));
-    return () => data.subscription.unsubscribe();
+    const openAuthUrl = async (url: string | null) => {
+      if (!url || !url.startsWith('savrdhcredit://')) return;
+      const fragment = url.split('#')[1] || '';
+      const params = new URLSearchParams(fragment);
+      const accessToken = params.get('access_token');
+      const refreshToken = params.get('refresh_token');
+      if (accessToken && refreshToken) {
+        const { error } = await supabase.auth.setSession({ access_token: accessToken, refresh_token: refreshToken });
+        if (error) Alert.alert('Verification failed', error.message);
+      }
+    };
+    Linking.getInitialURL().then(openAuthUrl);
+    const link = Linking.addEventListener('url', ({ url }) => openAuthUrl(url));
+    return () => { data.subscription.unsubscribe(); link.remove(); };
   }, []);
 
   const theme = dark ? darkTheme : lightTheme;
@@ -54,17 +67,16 @@ function Auth({ theme, dark, setDark }: { theme: AppTheme; dark: boolean; setDar
     setBusy(true);
     try {
       if (mode === 'otp') {
-        const { error } = await supabase.auth.signInWithOtp({ email: email.trim(), options: { shouldCreateUser: false } });
+        const { error } = await supabase.auth.signInWithOtp({ email: email.trim().toLowerCase(), options: { shouldCreateUser: false, emailRedirectTo: 'savrdhcredit://auth/callback' } });
         if (error) throw error;
         Alert.alert('OTP link sent', 'Please check your email to securely sign in.');
       } else if (mode === 'signup') {
         if (password.length < 8 || !name.trim()) throw new Error('Enter your name and a password of at least 8 characters.');
-        const { data, error } = await supabase.auth.signUp({ email: email.trim(), password, options: { data: { full_name: name.trim(), mobile: mobile.trim() } } });
+        const { data, error } = await supabase.auth.signUp({ email: email.trim().toLowerCase(), password, options: { emailRedirectTo: 'savrdhcredit://auth/callback', data: { full_name: name.trim(), mobile: mobile.trim() } } });
         if (error) throw error;
-        if (data.user) await supabase.from('scr01_profiles').upsert({ user_id: data.user.id, full_name: name.trim(), mobile: mobile.trim() });
-        Alert.alert('Account created', data.session ? 'Welcome to Savrdh.' : 'Please verify your email, then sign in.');
+        Alert.alert('Account created', data.session ? 'Welcome to Savrdh.' : 'Verification email bheja gaya hai. Email mein Confirm link dabaiye; app automatically open hokar login ho jayegi.');
       } else {
-        const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
+        const { error } = await supabase.auth.signInWithPassword({ email: email.trim().toLowerCase(), password });
         if (error) throw error;
       }
     } catch (e) { Alert.alert('Unable to continue', messageOf(e)); }
@@ -104,6 +116,12 @@ function CustomerApp({ session, theme, dark, setDark }: { session: Session; them
 
   async function load() {
     const uid = session.user.id;
+    const metadata = session.user.user_metadata || {};
+    await supabase.from('scr01_profiles').upsert({
+      user_id: uid,
+      full_name: metadata.full_name || session.user.email?.split('@')[0] || 'Savrdh Customer',
+      mobile: metadata.mobile || null,
+    }, { onConflict: 'user_id', ignoreDuplicates: true });
     const [p, c, r, pay] = await Promise.all([
       supabase.from('scr01_profiles').select('*').eq('user_id', uid).maybeSingle(),
       supabase.from('scr01_credit_reports').select('*').eq('user_id', uid).order('created_at', { ascending: false }).limit(1).maybeSingle(),
