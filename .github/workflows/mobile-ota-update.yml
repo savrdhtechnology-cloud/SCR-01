@@ -1,0 +1,54 @@
+name: Publish Mobile OTA Update
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "mobile/App.tsx"
+      - "mobile/src/**"
+      - "mobile/assets/**"
+      - ".github/workflows/mobile-ota-update.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  publish-update:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: mobile
+    env:
+      CI: "1"
+      EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+      EXPO_PUBLIC_SUPABASE_URL: https://qngjmepksxavimwnhtqt.supabase.co
+      EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY: sb_publishable_rma90Xm4Hy4nT0CEXTlqHQ_6oKKWeds
+      EXPO_PUBLIC_WEBSITE_URL: https://savrdhfinancialservices.com
+      EXPO_PUBLIC_PORTAL_URL: https://savrdhfinancialservices.com/portal/login
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: mobile/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Type check
+        run: npm run typecheck
+
+      - name: Verify Expo token
+        run: |
+          if [ -z "$EXPO_TOKEN" ]; then
+            echo "EXPO_TOKEN repository secret is required to publish OTA updates."
+            exit 1
+          fi
+
+      - name: Publish production OTA update
+        run: npx eas-cli@latest update --channel production --message "SCR mobile OTA ${GITHUB_SHA::7}" --non-interactive
