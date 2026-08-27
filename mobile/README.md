@@ -16,6 +16,8 @@ Production-oriented Expo/React Native customer application connected to the same
 - Realtime CRM advisor chat
 - Payment and receipt history
 - Website/client-portal deep links
+- Android keyboard-aware login/signup/reset forms
+- SAVRDH gold “S” launcher icon
 
 ## Local setup
 
@@ -43,7 +45,7 @@ Security notes:
 
 ## Release
 
-After replacing the default Expo app icon/splash artwork with the approved Savrdh assets:
+Current Android native release target: **v1.0.21**.
 
 ```bash
 npx eas-cli build --platform android
