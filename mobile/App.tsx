@@ -16,7 +16,7 @@ type Tab = 'home' | 'report' | 'new' | 'requests' | 'profile';
 type AuthMode = 'password' | 'otp' | 'signup' | 'reset';
 type EmailOtpType = 'email' | 'signup' | 'recovery';
 
-const CURRENT_APP_VERSION = '1.0.16';
+const CURRENT_APP_VERSION = '1.0.21';
 const UPDATE_MANIFEST_URL = 'https://savrdhfinancialservices.com/api/mobile/latest';
 
 function isNewerVersion(latest: string, current: string) {
@@ -148,8 +148,8 @@ function Auth({ theme, dark, setDark }: { theme: AppTheme; dark: boolean; setDar
     finally { setBusy(false); }
   }
 
-  return <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
-    <ScrollView contentContainerStyle={[styles.authWrap, { backgroundColor: theme.bg }]} keyboardShouldPersistTaps="handled">
+  return <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} keyboardVerticalOffset={Platform.OS === 'ios' ? 8 : 0} style={{ flex: 1 }}>
+    <ScrollView contentContainerStyle={[styles.authWrap, { backgroundColor: theme.bg }]} keyboardShouldPersistTaps="handled" keyboardDismissMode={Platform.OS === 'ios' ? 'interactive' : 'on-drag'} showsVerticalScrollIndicator={false}>
       <View style={styles.topActions}><ThemeToggle dark={dark} setDark={setDark} theme={theme} /></View>
       <Brand theme={theme} />
       <Text style={[styles.hero, { color: theme.text }]}>Take Control of Your Credit</Text>

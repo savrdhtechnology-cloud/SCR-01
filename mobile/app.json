@@ -2,7 +2,7 @@
   "expo": {
     "name": "Savrdh Credit Resolution",
     "slug": "savrdh-credit-resolution",
-    "version": "1.0.16",
+    "version": "1.0.21",
     "icon": "./assets/icon.png",
     "orientation": "portrait",
     "userInterfaceStyle": "automatic",
@@ -33,15 +33,23 @@
     },
     "android": {
       "package": "com.savrdhfinancialservices.creditresolution",
-      "versionCode": 16,
+      "versionCode": 21,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#020617"
       },
-      "permissions": ["INTERNET"]
+      "permissions": [
+        "INTERNET"
+      ],
+      "softwareKeyboardLayoutMode": "resize"
     },
-    "web": { "bundler": "metro" },
-    "plugins": ["expo-secure-store", "expo-document-picker"],
+    "web": {
+      "bundler": "metro"
+    },
+    "plugins": [
+      "expo-secure-store",
+      "expo-document-picker"
+    ],
     "extra": {
       "websiteUrl": "https://savrdhfinancialservices.com",
       "clientPortalUrl": "https://savrdhfinancialservices.com/portal/login",
