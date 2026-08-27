@@ -15,6 +15,19 @@ import type { CreditReport, Message, Payment, Profile, ResolutionRequest } from 
 type Tab = 'home' | 'report' | 'new' | 'requests' | 'profile';
 type AuthMode = 'password' | 'otp' | 'signup';
 
+const CURRENT_APP_VERSION = '1.0.11';
+const UPDATE_MANIFEST_URL = 'https://savrdhfinancialservices.com/api/mobile/latest';
+
+function isNewerVersion(latest: string, current: string) {
+  const a = latest.split('.').map((part) => Number(part) || 0);
+  const b = current.split('.').map((part) => Number(part) || 0);
+  for (let i = 0; i < Math.max(a.length, b.length); i += 1) {
+    if ((a[i] || 0) > (b[i] || 0)) return true;
+    if ((a[i] || 0) < (b[i] || 0)) return false;
+  }
+  return false;
+}
+
 export default function App() {
   const systemDark = Appearance.getColorScheme() === 'dark';
   const [dark, setDark] = useState(systemDark);
@@ -38,6 +51,24 @@ export default function App() {
     Linking.getInitialURL().then(openAuthUrl);
     const link = Linking.addEventListener('url', ({ url }) => openAuthUrl(url));
     return () => { data.subscription.unsubscribe(); link.remove(); };
+  }, []);
+
+  useEffect(() => {
+    if (Platform.OS !== 'android') return;
+    fetch(UPDATE_MANIFEST_URL)
+      .then((response) => response.ok ? response.json() : null)
+      .then((release) => {
+        if (!release?.version || !release?.apkUrl || !isNewerVersion(release.version, CURRENT_APP_VERSION)) return;
+        Alert.alert(
+          'New SAVRDH update available',
+          `Version ${release.version} is ready. Download and install the latest secure release now.`,
+          [
+            { text: 'Later', style: 'cancel' },
+            { text: 'Update Now', onPress: () => Linking.openURL(release.apkUrl) },
+          ],
+        );
+      })
+      .catch(() => undefined);
   }, []);
 
   const theme = dark ? darkTheme : lightTheme;
