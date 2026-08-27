@@ -1,4 +1,6 @@
-const APK_URL = "https://github.com/savrdhtechnology-cloud/SCR-01/releases/download/mobile-release-v1.0.11/Savrdh-Credit-Resolution.apk";
+import Link from "next/link";
+
+const APK_URL = "/api/download-apk";
 
 export default function DownloadsPage() {
   return (
@@ -11,7 +13,7 @@ export default function DownloadsPage() {
         <div className="download-meta"><span>Android APK</span><span>Version 1.0.11</span><span>66.7 MB</span></div>
         <a className="download-primary" href={APK_URL}>Download APK ↓</a>
         <p className="download-note">पहले पुराना version uninstall करें। Download के बाद “Install unknown apps” permission allow करके नया APK install करें।</p>
-        <a className="download-back" href="/">← Back to Savrdh Credit Resolution</a>
+        <Link className="download-back" href="/">← Back to Savrdh Credit Resolution</Link>
       </section>
     </main>
   );
