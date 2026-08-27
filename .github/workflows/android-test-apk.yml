@@ -48,14 +48,6 @@ jobs:
       - name: Type check
         run: npm run typecheck
 
-      - name: Generate branded app icons
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y imagemagick
-          mkdir -p assets
-          convert -background none assets/icon.svg -resize 1024x1024 assets/icon.png
-          cp assets/icon.png assets/adaptive-icon.png
-
       - name: Generate Android project
         run: npx expo prebuild --platform android --clean
 
@@ -81,9 +73,10 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          TAG="mobile-release-v1.0.${GITHUB_RUN_NUMBER}"
+          APP_VERSION="$(node -p "require('./app.json').expo.version")"
+          TAG="mobile-release-v${APP_VERSION}"
           gh release create "$TAG" dist/Savrdh-Credit-Resolution.apk \
             --repo "${GITHUB_REPOSITORY}" \
-            --title "Savrdh Android v1.0.${GITHUB_RUN_NUMBER}" \
+            --title "Savrdh Android v${APP_VERSION}" \
             --notes "Standalone Android release APK connected to the Savrdh CRM and Supabase production database." \
             --latest
