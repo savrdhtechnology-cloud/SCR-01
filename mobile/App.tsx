@@ -14,8 +14,9 @@ import type { CreditReport, Message, Payment, Profile, ResolutionRequest } from 
 
 type Tab = 'home' | 'report' | 'new' | 'requests' | 'profile';
 type AuthMode = 'password' | 'otp' | 'signup' | 'reset';
+type EmailOtpType = 'email' | 'signup' | 'recovery';
 
-const CURRENT_APP_VERSION = '1.0.12';
+const CURRENT_APP_VERSION = '1.0.13';
 const UPDATE_MANIFEST_URL = 'https://savrdhfinancialservices.com/api/mobile/latest';
 
 function isNewerVersion(latest: string, current: string) {
@@ -93,6 +94,7 @@ function Auth({ theme, dark, setDark }: { theme: AppTheme; dark: boolean; setDar
   const [mobile, setMobile] = useState('');
   const [otp, setOtp] = useState('');
   const [otpSent, setOtpSent] = useState(false);
+  const [otpType, setOtpType] = useState<EmailOtpType>('email');
   const [resetVerified, setResetVerified] = useState(false);
   const [busy, setBusy] = useState(false);
 
@@ -104,23 +106,25 @@ function Auth({ theme, dark, setDark }: { theme: AppTheme; dark: boolean; setDar
         if (!otpSent) {
           const { error } = await supabase.auth.signInWithOtp({ email: email.trim().toLowerCase(), options: { shouldCreateUser: false } });
           if (error) throw error;
+          setOtpType('email');
           setOtpSent(true);
           Alert.alert('OTP sent', '6-digit SAVRDH verification code aapke registered email par bheja gaya hai.');
         } else {
           if (otp.length !== 6) throw new Error('Enter the 6-digit OTP.');
-          const { error } = await supabase.auth.verifyOtp({ email: email.trim().toLowerCase(), token: otp, type: 'email' });
+          const { error } = await supabase.auth.verifyOtp({ email: email.trim().toLowerCase(), token: otp, type: otpType });
           if (error) throw error;
         }
       } else if (mode === 'signup') {
         if (password.length < 8 || !name.trim()) throw new Error('Enter your name and a password of at least 8 characters.');
         const { data, error } = await supabase.auth.signUp({ email: email.trim().toLowerCase(), password, options: { data: { full_name: name.trim(), mobile: mobile.trim() } } });
         if (error) throw error;
-        setMode('otp'); setOtpSent(true);
+        setOtpType('signup'); setMode('otp'); setOtpSent(true);
         Alert.alert('Account created', data.session ? 'Welcome to SAVRDH.' : '6-digit verification code email par bheja gaya hai. Code enter karke account activate karein.');
       } else if (mode === 'reset') {
         if (!otpSent) {
           const { error } = await supabase.auth.resetPasswordForEmail(email.trim().toLowerCase());
           if (error) throw error;
+          setOtpType('recovery');
           setOtpSent(true);
           Alert.alert('Reset code sent', 'Email mein mila 6-digit recovery code enter karein.');
         } else if (!resetVerified) {
