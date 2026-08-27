@@ -7,6 +7,19 @@
     "orientation": "portrait",
     "userInterfaceStyle": "automatic",
     "scheme": "savrdhcredit",
+    "owner": "savrdhtechnologys-team",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "enabled": true,
+      "checkAutomatically": "ON_LOAD",
+      "fallbackToCacheTimeout": 0,
+      "url": "https://u.expo.dev/ea2f0a2c-3ad9-46f2-b3f7-6c03c97955f7",
+      "requestHeaders": {
+        "expo-channel-name": "production"
+      }
+    },
     "splash": {
       "backgroundColor": "#071426",
       "resizeMode": "contain"
@@ -31,7 +44,10 @@
     "plugins": ["expo-secure-store", "expo-document-picker"],
     "extra": {
       "websiteUrl": "https://savrdhfinancialservices.com",
-      "clientPortalUrl": "https://savrdhfinancialservices.com/portal/login"
+      "clientPortalUrl": "https://savrdhfinancialservices.com/portal/login",
+      "eas": {
+        "projectId": "ea2f0a2c-3ad9-46f2-b3f7-6c03c97955f7"
+      }
     }
   }
 }
