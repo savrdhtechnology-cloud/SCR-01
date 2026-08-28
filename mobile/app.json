@@ -2,7 +2,7 @@
   "expo": {
     "name": "Savrdh Credit Resolution",
     "slug": "savrdh-credit-resolution",
-    "version": "1.0.21",
+    "version": "1.0.22",
     "icon": "./assets/icon.png",
     "orientation": "portrait",
     "userInterfaceStyle": "automatic",
@@ -33,7 +33,7 @@
     },
     "android": {
       "package": "com.savrdhfinancialservices.creditresolution",
-      "versionCode": 21,
+      "versionCode": 22,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#020617"
