@@ -1,3 +1,4 @@
+// Production mobile sync refresh: CRM signup bridge and secure document storage policies are active.
 export type Profile = {
   user_id: string;
   full_name: string | null;
